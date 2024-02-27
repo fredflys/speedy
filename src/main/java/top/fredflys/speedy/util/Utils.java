@@ -4,6 +4,7 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -33,17 +34,37 @@ public class Utils {
         }
 
         File output = new File(args[1]);
-        System.out.println(output.isDirectory());
-        System.out.println(output.isFile());
+        // System.out.println(output.isDirectory());
+        // System.out.println(output.isFile());
         
+        // a directory is provided
         if (output.isDirectory()) {
             return Paths.get(output.toString(), resourceName);
         }
+        
+        // output file alreasy exists
+        if (output.isFile()) {
+            System.err.println("Output file exists. Please check the name and try again.");
+            System.exit(1);
+        }
 
-        return Paths.get(currentPath.toString(), args[1]);
+        // a directory is provided along with a new file name
+        File parentFile = new File(getParentPath(args[1]));
+        if (parentFile.isDirectory()) {
+            return Paths.get(args[1]);
+        }
+
+        try {
+            return Paths.get(currentPath.toString(), args[1]);
+        } catch (InvalidPathException e) {
+            System.err.println("Error: " + e);
+            System.exit(1);
+        }
+
+        return null;
     }
 
-    public static String getResourceName(String url) {
+    static String getResourceName(String url) {
         if (url == null) return null;
         
         int lastSlashIndex = url.lastIndexOf("/");
@@ -53,5 +74,17 @@ public class Utils {
         }
         
         return url.substring(lastSlashIndex + 1);
+    }
+
+    static String getParentPath(String path) {
+        if (path == null) return null;
+        
+        int lastSlashIndex = path.lastIndexOf("/") == -1 ? path.lastIndexOf("\\") : path.lastIndexOf("/");
+        if (lastSlashIndex == -1) {
+            System.err.println("Invalid url. Check the url provided and try again.");
+            System.exit(1);
+        }
+        
+        return path.substring(0, lastSlashIndex);
     }
 }
