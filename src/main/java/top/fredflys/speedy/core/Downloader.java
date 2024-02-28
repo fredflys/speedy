@@ -10,6 +10,7 @@ import java.net.URL;
 import java.nio.file.Path;
 
 import top.fredflys.speedy.constant.Constants;
+import top.fredflys.speedy.util.Log;
 
 public class Downloader {
     
@@ -41,9 +42,10 @@ public class Downloader {
                 bufferOut.write(len);
             }
         } catch (FileNotFoundException e) {
-            System.err.println("File not found: " + e);
+            Log.error("File not found: %s", e.toString());
         } catch (Exception e) {
-            System.err.println("Error: " + e);;
+            System.err.println("Error: " + e);
+            Log.error(e.toString());
         }
     }
 }

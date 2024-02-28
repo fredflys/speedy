@@ -11,14 +11,13 @@ import java.nio.file.Paths;
 public class Utils {
     public static Path parseArgs(String[] args) {
         if (args == null || args.length < 1) {
-            System.err.println("Usage : java -jar speedy.jar <url> [-o]");
-            System.exit(1);
+            Log.error("Usage : java -jar speedy.jar <url> [output path]");
         }
 
         try {
             new URL(args[0]).toURI();
         } catch (MalformedURLException | URISyntaxException e) {
-            System.err.println("Error: " + e);
+            Log.error("Invalid download url: %s", args[0]);
         }
 
         String resourceName = getResourceName(args[0]);
@@ -29,7 +28,6 @@ public class Utils {
         // output directory and file name not specified
         if (args.length == 1) {
             outputPath = Paths.get(currentPath.toString(), resourceName);
-            System.out.println(outputPath.toString());
             return outputPath;
         }
 
@@ -44,8 +42,7 @@ public class Utils {
         
         // output file alreasy exists
         if (output.isFile()) {
-            System.err.println("Output file exists. Please check the name and try again.");
-            System.exit(1);
+            Log.error("Output file exists. Please check the name and try again.");
         }
 
         // a directory is provided along with a new file name
@@ -57,8 +54,7 @@ public class Utils {
         try {
             return Paths.get(currentPath.toString(), args[1]);
         } catch (InvalidPathException e) {
-            System.err.println("Error: " + e);
-            System.exit(1);
+            Log.error("%s", e.toString());
         }
 
         return null;
@@ -69,8 +65,7 @@ public class Utils {
         
         int lastSlashIndex = url.lastIndexOf("/");
         if (lastSlashIndex == -1) {
-            System.err.println("Invalid url. Check the url provided and try again.");
-            System.exit(1);
+            Log.error("Invalid url. Check the url provided and try again.");
         }
         
         return url.substring(lastSlashIndex + 1);
@@ -81,8 +76,7 @@ public class Utils {
         
         int lastSlashIndex = path.lastIndexOf("/") == -1 ? path.lastIndexOf("\\") : path.lastIndexOf("/");
         if (lastSlashIndex == -1) {
-            System.err.println("Invalid url. Check the url provided and try again.");
-            System.exit(1);
+            Log.error("Invalid path. Check the path provided and try again.");
         }
         
         return path.substring(0, lastSlashIndex);
