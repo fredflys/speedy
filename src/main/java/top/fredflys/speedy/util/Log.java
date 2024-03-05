@@ -3,8 +3,6 @@ package top.fredflys.speedy.util;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
-import javax.swing.text.DateFormatter;
-
 public class Log {
 
     public enum LogLevel {

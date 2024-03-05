@@ -4,6 +4,7 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -80,5 +81,13 @@ public class Utils {
         }
         
         return path.substring(0, lastSlashIndex);
+    }
+
+    public static long getFileSize(String path) {
+        File file = new File(path);
+        if (file.isDirectory()) return -1;
+        if (!file.isFile()) return 0;
+
+        return file.length();
     }
 }
