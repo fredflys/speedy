@@ -74,7 +74,10 @@ public class Downloader {
         } finally {
             if (connection != null) connection.disconnect();
             scheduler.shutdownNow();
-            System.out.printf("\r\rDownload finished. File is saved to %s.", outputPath.toString());
+            Utils.printOnSameLineWithRightPadding(
+                String.format("Download finished. File is saved to %s.", outputPath.toString()), 
+                analyzer.getPrevStatsLength()
+            );
         }
     }
 }

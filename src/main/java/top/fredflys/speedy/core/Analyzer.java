@@ -1,6 +1,7 @@
 package top.fredflys.speedy.core;
 
 import top.fredflys.speedy.constant.Constants;
+import top.fredflys.speedy.util.Utils;
 
 public class Analyzer implements Runnable {
 
@@ -9,8 +10,11 @@ public class Analyzer implements Runnable {
     private long localFinishedInBytes;
     private volatile long downloadedInBytes = 0;
     private long previousDownloadedInBytes = 0;
+    private int prevStatsLength = 0;
 
-    
+    public int getPrevStatsLength() {
+        return prevStatsLength;
+    }
     public void setDownloadedInBytes(long downloadedInBytes) {
         this.downloadedInBytes = downloadedInBytes;
     }
@@ -43,8 +47,9 @@ public class Analyzer implements Runnable {
             expectedRemainingTimeInSeconds = -1d;
         }
 
-        String template = "Downloaded %.2f mb / %.2f mb at %s/s. Remaing time: %s.";
-        String stats = String.format(template, 
+        String template = "Downloaded %.2f%% %.2f mb / %.2f mb at %s/s. Remaing time: %s.";
+        String stats = String.format(template,
+            (double) totalDownloadedInBytes / totalInBytes * 100,
             (double) totalDownloadedInBytes / Constants.MB, 
             (double) totalInBytes / Constants.MB, 
             downdloadSpeedInMB < 1  
@@ -55,8 +60,14 @@ public class Analyzer implements Runnable {
                 : String.format("%.1f /s", expectedRemainingTimeInSeconds)
         );
 
+
         // download info is displayed on one line 
-        System.out.printf("\r%s", stats);
+        Utils.printOnSameLineWithRightPadding(
+            String.format("%-80s",stats), 
+            prevStatsLength
+        );
+
+        prevStatsLength = stats.length();
     }
 
 }

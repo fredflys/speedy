@@ -90,4 +90,14 @@ public class Utils {
 
         return file.length();
     }
+
+    public static void printOnSameLineWithRightPadding(String msg, int previousLineLength) {
+        System.out.print("\r");
+        System.out.print(msg);
+        int padding = Math.max(0, previousLineLength - msg.length());
+        for (int i = 0; i < padding; i++) {
+            System.out.print(" ");
+        }
+        System.out.flush();
+    }
 }
