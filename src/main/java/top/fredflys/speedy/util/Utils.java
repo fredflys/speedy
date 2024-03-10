@@ -4,7 +4,6 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -61,7 +60,7 @@ public class Utils {
         return null;
     }
 
-    static String getResourceName(String url) {
+    public static String getResourceName(String url) {
         if (url == null) return null;
         
         int lastSlashIndex = url.lastIndexOf("/");
@@ -72,7 +71,7 @@ public class Utils {
         return url.substring(lastSlashIndex + 1);
     }
 
-    static String getParentPath(String path) {
+    public static String getParentPath(String path) {
         if (path == null) return null;
         
         int lastSlashIndex = path.lastIndexOf("/") == -1 ? path.lastIndexOf("\\") : path.lastIndexOf("/");
@@ -87,6 +86,10 @@ public class Utils {
         File file = new File(path);
         if (file.isDirectory()) return -1;
         if (!file.isFile()) return 0;
+
+        if (file.length() == -1) {
+            Log.error("%s is not a valid path for the output file.", path);
+        }
 
         return file.length();
     }

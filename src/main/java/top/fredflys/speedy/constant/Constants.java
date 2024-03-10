@@ -5,4 +5,5 @@ public class Constants {
     public static final int KB = 1024;
     public static final int MB = KB * 1024;
     public static final int DOWNLOAD_BUFFER_SIZE = 1024 * 100;
+    public static final int WORKERS = 5;
 }
