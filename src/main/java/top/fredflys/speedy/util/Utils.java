@@ -1,7 +1,6 @@
 package top.fredflys.speedy.util;
 
 import java.io.File;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -43,7 +42,8 @@ public class Utils {
         
         // output file alreasy exists
         if (output.isFile()) {
-            Log.error("Output file exists. Please check the name and try again.");
+            System.out.println("Output file exists. Please check the name and try again.");
+            System.exit(1);
         }
 
         // a directory is provided along with a new file name

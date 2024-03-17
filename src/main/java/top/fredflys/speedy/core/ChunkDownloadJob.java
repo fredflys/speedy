@@ -8,6 +8,7 @@ import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.CountDownLatch;
 
 import top.fredflys.speedy.constant.Constants;
 import top.fredflys.speedy.util.Log;
@@ -18,13 +19,17 @@ public class ChunkDownloadJob implements Runnable {
     private long chunkStartPos;
     private long chunkEndPos;
     private Path chunkOutputPath;
+    private CountDownLatch latch;
+    private Analyzer analyzer;
 
-    public ChunkDownloadJob (String url, long start, long end, Path path, int partNo) {
+    public ChunkDownloadJob (String url, long start, long end, Path path, int partNo, CountDownLatch countDownLatch, Analyzer statsAnalyzer) {
         downloadUrl = url;
         chunkStartPos = start;
         chunkEndPos = end;
         String suffix = String.format(".temp.%d", partNo);
         chunkOutputPath = Paths.get(path.toString() + suffix);
+        latch = countDownLatch;
+        analyzer = statsAnalyzer;
     }
 
     @Override
@@ -42,8 +47,9 @@ public class ChunkDownloadJob implements Runnable {
             byte[] temporaryBuffer = new byte[Constants.DOWNLOAD_BUFFER_SIZE];
             int len = -1;
             while ((len = bufferIn.read(temporaryBuffer)) != -1) {
-                Log.info("Download from %s to %s", start, end);
+                // Log.info("Download from %s to %s", start, end);
                 randomOut.write(temporaryBuffer, 0, len);
+                analyzer.addDownloadedInBytes(len);
             }
         } catch (FileNotFoundException e) {
             Log.error("Failed when trying to read the local downloaded file: %s",e);
@@ -51,6 +57,7 @@ public class ChunkDownloadJob implements Runnable {
             Log.error("Failed when downlading from the url: %s", e);
         } finally {
             if (connection != null) connection.disconnect();
+            latch.countDown();
         }
     }
 }

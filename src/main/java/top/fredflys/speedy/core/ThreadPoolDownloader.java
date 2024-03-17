@@ -4,11 +4,13 @@ import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.net.HttpURLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -19,11 +21,16 @@ import top.fredflys.speedy.util.Utils;
 
 public class ThreadPoolDownloader implements Downloader {
     public  int workers = Constants.WORKERS;
+    public ScheduledExecutorService statsScheduler = Executors.newScheduledThreadPool(1);
     public ThreadPoolExecutor downloadThreadsPool = new ThreadPoolExecutor(workers, workers, 0, TimeUnit.SECONDS, new ArrayBlockingQueue<>(workers));
+    private CountDownLatch latch = new CountDownLatch(workers);
 
     @Override
     public void download(String url, Path outputPath) {
         long totalResourceSize = URLUtils.getResourceSize(url);
+        Analyzer analyzer = new Analyzer(totalResourceSize, 0L);
+        statsScheduler.scheduleAtFixedRate(analyzer, 1, 1, TimeUnit.SECONDS);
+
         long start, end;
         long chunkSize = totalResourceSize / workers;
         for (int worker = 0; worker < workers; worker++) {
@@ -33,22 +40,33 @@ public class ThreadPoolDownloader implements Downloader {
                 end = 0;
             }
             
-            ChunkDownloadJob task = new ChunkDownloadJob(url, start, end, outputPath, worker);
+            ChunkDownloadJob task = new ChunkDownloadJob(url, start, end, outputPath, worker, latch, analyzer);
             downloadThreadsPool.execute(task);
-
         }
 
-        downloadThreadsPool.shutdown();
         try {
-            if (downloadThreadsPool.awaitTermination(10, TimeUnit.MINUTES)) {
-                merge(outputPath);
-                return;
-            } 
-
-            Log.error("Download timed out. Please try again later.");
+            latch.await();
+            merge(outputPath);
+            Utils.printOnSameLineWithRightPadding(
+                String.format("Download finished. File is saved to %s.", outputPath.toString()), 
+                analyzer.getPrevStatsLength()
+            );
         } catch (InterruptedException e) {
-            Log.error("Download by chunk failed: %s", e);
+            Log.error("Download was interruppted. Please try again later.", e);
+        } finally {
+            statsScheduler.shutdownNow();
+            downloadThreadsPool.shutdown();
+            try {
+                if (downloadThreadsPool.awaitTermination(1, TimeUnit.MINUTES)) {
+                    return;
+                } 
+                Log.error("Download timed out. Please try again later.");
+            } catch (InterruptedException e) {
+                Log.error("Download by chunk failed: %s", e);
+            }
         }
+
+
     }
     
     public void merge(Path outputPath) {
