@@ -1,5 +1,7 @@
 package top.fredflys.speedy.core;
 
+import java.util.concurrent.atomic.LongAdder;
+
 import top.fredflys.speedy.constant.Constants;
 import top.fredflys.speedy.util.Utils;
 
@@ -8,19 +10,19 @@ public class Analyzer implements Runnable {
     private long totalInBytes;
 
     private long localFinishedInBytes;
-    private volatile long downloadedInBytes = 0;
-    private long previousDownloadedInBytes = 0;
+    private volatile LongAdder downloadedInBytes = new LongAdder();
+    private volatile LongAdder previousDownloadedInBytes = new LongAdder();
     private int prevStatsLength = 0;
 
     public int getPrevStatsLength() {
         return prevStatsLength;
     }
-    public void setDownloadedInBytes(long downloadedInBytes) {
-        this.downloadedInBytes = downloadedInBytes;
+    public void addDownloadedInBytes(long downloadedInBytes) {
+        this.downloadedInBytes.add(downloadedInBytes);
     }
 
     public long getDownloadedInBytes() {
-        return downloadedInBytes;
+        return downloadedInBytes.longValue();
     }
 
     public void setLocalFinishedInBytes(long localFinishedInBytes) {
@@ -35,14 +37,16 @@ public class Analyzer implements Runnable {
     @Override
     public void run() {
 
-        long diffInBytes = downloadedInBytes - previousDownloadedInBytes;
+        long diffInBytes = downloadedInBytes.longValue() - previousDownloadedInBytes.longValue();
         double downloadSpeedInKB = (double) diffInBytes / Constants.KB;
         double downdloadSpeedInMB = (double) diffInBytes / Constants.MB;
-        previousDownloadedInBytes = downloadedInBytes;
+        previousDownloadedInBytes.reset();
+        previousDownloadedInBytes.add(downloadedInBytes.longValue());
 
-        long totalDownloadedInBytes = localFinishedInBytes + downloadedInBytes;
+        long totalDownloadedInBytes = localFinishedInBytes + downloadedInBytes.longValue();
         long remainingSizeInBytes = totalInBytes - totalDownloadedInBytes;
         double expectedRemainingTimeInSeconds = (double) remainingSizeInBytes / diffInBytes;
+        // System.out.printf("remaing size: %d. diff in bytes: %d. expected time: %d\n", remainingSizeInBytes, diffInBytes, expectedRemainingTimeInSeconds);
         if (expectedRemainingTimeInSeconds == Double.POSITIVE_INFINITY) {
             expectedRemainingTimeInSeconds = -1d;
         }
