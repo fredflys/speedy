@@ -1,6 +1,7 @@
 package top.fredflys.speedy.util;
 
 import java.io.File;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -103,4 +104,6 @@ public class Utils {
         }
         System.out.flush();
     }
+
+
 }
