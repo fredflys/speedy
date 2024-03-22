@@ -31,6 +31,12 @@ public class Utils {
             return outputPath;
         }
 
+        try {
+            Paths.get(args[1]);
+        } catch (InvalidPathException e) {
+            Log.error("Invalid download path: %s", args[1]);
+        }
+
         File output = new File(args[1]);
         // System.out.println(output.isDirectory());
         // System.out.println(output.isFile());
@@ -46,8 +52,14 @@ public class Utils {
             System.exit(1);
         }
 
+        String parentPath = getParentPath(args[1]);
+        // only a file name is provided
+        if (parentPath == "") {
+            return Paths.get(currentPath.toString(), args[1]);
+        }
+
         // a directory is provided along with a new file name
-        File parentFile = new File(getParentPath(args[1]));
+        File parentFile = new File(parentPath);
         if (parentFile.isDirectory()) {
             return Paths.get(args[1]);
         }
@@ -77,7 +89,8 @@ public class Utils {
         
         int lastSlashIndex = path.lastIndexOf("/") == -1 ? path.lastIndexOf("\\") : path.lastIndexOf("/");
         if (lastSlashIndex == -1) {
-            Log.error("Invalid path. Check the path provided and try again.");
+            return "";
+            // Log.error("Invalid path. Check the path provided and try again.");
         }
         
         return path.substring(0, lastSlashIndex);
